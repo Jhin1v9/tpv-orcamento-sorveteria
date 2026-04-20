@@ -1,0 +1,25 @@
+name: sorveteria_tpv_v2
+repository: https://github.com/sorveteria-sabadell/tpv-system
+
+packages:
+  - packages/*
+  - apps/*
+
+scripts:
+  analyze:
+    run: melos exec -c 1 -- "dart analyze . --fatal-infos"
+  format:
+    run: melos exec -c 1 -- "dart format ."
+  build:kiosk:
+    run: cd apps/kiosk_cliente && flutter build apk --release
+  build:kds:
+    run: cd apps/cocina_kds && flutter build web --release
+  build:admin:
+    run: cd apps/admin_dashboard && flutter build web --release
+  get:
+    run: melos exec -c 1 -- "flutter pub get"
+  generate:
+    run: melos exec -c 1 -- "flutter pub run build_runner build --delete-conflicting-outputs"
+
+dev_dependencies:
+  melos: ^6.1.0

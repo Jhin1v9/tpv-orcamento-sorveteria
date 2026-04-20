@@ -1,0 +1,24 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+pubspec.lock
+build/
+*.g.dart
+*.freezed.dart
+nohup.out
+
+# Drift
+database_service/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+
+# Melos
+pubspec_overrides.yaml

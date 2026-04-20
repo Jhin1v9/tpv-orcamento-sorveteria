@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORCAMENTO TPV SORVETERIA | Jhin1v9 Tech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a2e', 600: '#23233a' },
+                        brand: { red: '#ff4757', orange: '#ffa502', green: '#2ed573', blue: '#3742fa', purple: '#8e44ad' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0f; }
+        .glass { background: rgba(26, 26, 46, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-strong { background: rgba(18, 18, 26, 0.85); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); }
+        .gradient-text { background: linear-gradient(135deg, #fff 0%, #a0a0b0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glow-red { box-shadow: 0 0 40px rgba(255,71,87,0.15); }
+        .glow-orange { box-shadow: 0 0 40px rgba(255,165,2,0.15); }
+        .glow-green { box-shadow: 0 0 40px rgba(46,213,115,0.15); }
+        .plan-card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .plan-card:hover { transform: translateY(-8px); }
+        .feature-check { color: #2ed573; }
+        .feature-x { color: #ff4757; }
+        .feature-warn { color: #ffa502; }
+        .badge { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; }
+        .price-tag { font-family: 'Space Grotesk', sans-serif; }
+        .section-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        .float { animation: float 4s ease-in-out infinite; }
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            .glass, .glass-strong { background: white !important; border: 1px solid #ddd !important; color: black !important; }
+            .gradient-text { -webkit-text-fill-color: black !important; color: black !important; }
+        }
+        .comparison-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .sticky-nav { position: sticky; top: 0; z-index: 50; }
+        .tab-active { border-bottom: 2px solid #2ed573; color: #2ed573; }
+        .tab-inactive { border-bottom: 2px solid transparent; color: #a0a0b0; }
+        .tab-inactive:hover { color: #fff; }
+    </style>
+</head>
+<body class="text-gray-200 antialiased overflow-x-hidden">
+
+    <!-- NAV -->
+    <nav class="sticky-nav glass-strong border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-green to-brand-blue flex items-center justify-center text-white font-bold text-lg">J</div>
+                <div>
+                    <h1 class="font-display font-bold text-white text-sm tracking-wide">JHIN1V9 TECH</h1>
+                    <p class="text-xs text-gray-500">Sabadell, Catalunha</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center gap-6 text-sm">
+                <a href="#analise" class="hover:text-white transition-colors">Analise</a>
+                <a href="#planos" class="hover:text-white transition-colors">Planos</a>
+                <a href="#mercado" class="hover:text-white transition-colors">Mercado</a>
+                <a href="#extra" class="hover:text-white transition-colors">PWA Extra</a>
+                <a href="#roi" class="hover:text-white transition-colors">ROI</a>
+            </div>
+            <button onclick="window.print()" class="no-print px-4 py-2 rounded-lg bg-brand-green/10 text-brand-green text-sm font-medium hover:bg-brand-green/20 transition-colors border border-brand-green/20">
+                Exportar PDF
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="relative overflow-hidden py-20 px-6">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(46,213,115,0.08),transparent_50%)]"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-green/10 border border-brand-green/20 text-brand-green text-xs font-semibold mb-6">
+                <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
+                ORCAMENTO TECNOLOGICO 2026
+            </div>
+            <h1 class="font-display text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                TPV <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-brand-blue">SORVETERIA</span><br>
+                <span class="text-3xl md:text-5xl text-gray-400 font-light">Pack Completo de Apps</span>
+            </h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-10 leading-relaxed">
+                Analise de mercado, precificacao realista e planos estruturados para transformar a operacao da sua sorveteria em Sabadell. 
+                Do kiosk self-service ao app PWA do cliente — tudo integrado.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 text-sm">
+                <div class="glass px-5 py-3 rounded-xl flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-red/10 flex items-center justify-center text-brand-red">📱</div>
+                    <div class="text-left"><div class="text-white font-semibold">4 Apps</div><div class="text-gray-500 text-xs">Kiosk + Cozinha + Admin + PWA</div></div>
+                </div>
+                <div class="glass px-5 py-3 rounded-xl flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-orange/10 flex items-center justify-center text-brand-orange">💳</div>
+                    <div class="text-left"><div class="text-white font-semibold">Elo Wallaby</div><div class="text-gray-500 text-xs">Android POS Integrado</div></div>
+                </div>
+                <div class="glass px-5 py-3 rounded-xl flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-green/10 flex items-center justify-center text-brand-green">⚡</div>
+                    <div class="text-left"><div class="text-white font-semibold">Supabase Real</div><div class="text-gray-500 text-xs">Backend em tempo real</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ANALISE DO PROJETO ATUAL -->
+    <section id="analise" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue text-xl">🔍</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">Analise do Projeto Atual</h2>
+                    <p class="text-gray-500">Baseado no demo em <a href="https://tpv-sorveteria-demo.vercel.app/" class="text-brand-blue hover:underline" target="_blank">tpv-sorveteria-demo.vercel.app</a></p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-green"></span> O que ja funciona
+                    </h3>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> App Kiosk com interface visual atraente (Vite + React + Tailwind)</li>
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> Sistema de pedidos com categorias (sorvetes, toppings, bebidas)</li>
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> Backend Supabase real com autenticacao</li>
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> App Cozinha com display de pedidos em tempo real</li>
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> App Admin com dashboard de gestao</li>
+                        <li class="flex items-start gap-3"><span class="feature-check mt-0.5">✓</span> Deploy na Vercel (performance excelente)</li>
+                    </ul>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-orange"></span> O que precisa ser feito
+                    </h3>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> Integracao com Elo Wallaby (hardware fisico)</li>
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> Sistema de pagamento (TPV virtual + fisico)</li>
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> PWA do Cliente (QR Code + pedido mobile)</li>
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> Impressao de tickets (integracao Epson/Star)</li>
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> Modo offline para o kiosk (falta de internet)</li>
+                        <li class="flex items-start gap-3"><span class="feature-warn mt-0.5">!</span> Certificacao fiscal espanhola (TicketBAI/Verifactus)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 border-l-4 border-brand-blue">
+                <h3 class="text-white font-semibold mb-3">Stack Tecnologico Confirmado</h3>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">React 18</span>
+                    <span class="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-400 text-xs font-medium border border-purple-500/20">TypeScript</span>
+                    <span class="px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 text-xs font-medium border border-cyan-500/20">Vite</span>
+                    <span class="px-3 py-1 rounded-lg bg-sky-500/10 text-sky-400 text-xs font-medium border border-sky-500/20">Tailwind CSS</span>
+                    <span class="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">Supabase</span>
+                    <span class="px-3 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs font-medium border border-orange-500/20">Capacitor</span>
+                    <span class="px-3 py-1 rounded-lg bg-gray-500/10 text-gray-400 text-xs font-medium border border-gray-500/20">Android</span>
+                    <span class="px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 text-xs font-medium border border-indigo-500/20">PWA</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- PESQUISA DE MERCADO -->
+    <section id="mercado" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-purple/10 flex items-center justify-center text-brand-purple text-xl">📊</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">Pesquisa de Mercado 2026</h2>
+                    <p class="text-gray-500">Precos reais de concorrentes e benchmarks da industria</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-10">
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-display font-bold text-brand-green mb-2">€50-89</div>
+                    <div class="text-sm text-gray-400 mb-3">/mes por terminal</div>
+                    <div class="text-xs text-gray-500">Square Kiosk €50/mes [^5^]<br>Flipdish Kiosk €79/mes [^16^]<br>Toast POS €69/mes [^8^]</div>
+                </div>
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-display font-bold text-brand-orange mb-2">€8K-25K</div>
+                    <div class="text-sm text-gray-400 mb-3">desenvolvimento custom</div>
+                    <div class="text-xs text-gray-500">App restaurante simples: €8-15K [^19^]<br>App complexo: €20-25K [^19^]<br>Freelance Europa: €80-200/h [^17^]</div>
+                </div>
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-3xl font-display font-bold text-brand-blue mb-2">15-25%</div>
+                    <div class="text-sm text-gray-400 mb-3">manutencao anual</div>
+                    <div class="text-xs text-gray-500">Do custo inicial por ano [^18^]<br>Suporte premium: €20-100/mes [^3^]<br>Infraestrutura cloud: €20-65/mes</div>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 overflow-x-auto">
+                <h3 class="text-white font-semibold mb-4">Tabela Comparativa — Concorrentes Diretos</h3>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/10 text-gray-400 text-left">
+                            <th class="pb-3 font-medium">Plataforma</th>
+                            <th class="pb-3 font-medium">Kiosk/Mes</th>
+                            <th class="pb-3 font-medium">App Cliente</th>
+                            <th class="pb-3 font-medium">Cozinha</th>
+                            <th class="pb-3 font-medium">Setup</th>
+                            <th class="pb-3 font-medium">Observacao</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-300">
+                        <tr class="comparison-row border-b border-white/5"><td class="py-3 font-medium text-white">Square</td><td>€50</td><td>€0 (incluso)</td><td>€30</td><td>€0</td><td class="text-gray-500">Limitado fora EUA</td></tr>
+                        <tr class="comparison-row border-b border-white/5"><td class="py-3 font-medium text-white">Flipdish</td><td>€79</td><td>€199</td><td>€0</td><td>€439+</td><td class="text-gray-500">Irlanda, forte na Europa [^16^]</td></tr>
+                        <tr class="comparison-row border-b border-white/5"><td class="py-3 font-medium text-white">Toast</td><td>€69</td><td>€0</td><td>€0</td><td>€0</td><td class="text-gray-500">Foco EUA, taxas altas</td></tr>
+                        <tr class="comparison-row border-b border-white/5"><td class="py-3 font-medium text-white">TouchBistro</td><td>€70</td><td>Extra</td><td>€0</td><td>€500+</td><td class="text-gray-500">iPad only</td></tr>
+                        <tr class="comparison-row border-b border-white/5"><td class="py-3 font-medium text-white">Lightspeed</td><td>€89</td><td>Extra</td><td>€0</td><td>€300+</td><td class="text-gray-500">Bom para retail</td></tr>
+                        <tr class="comparison-row"><td class="py-3 font-bold text-brand-green">MEU APP (Supremo)</td><td class="text-brand-green font-bold">€249</td><td class="text-brand-green font-bold">INCLUSO</td><td class="text-brand-green font-bold">INCLUSO</td><td class="text-brand-green font-bold">€8.500</td><td class="text-brand-green">4 apps + custom + suporte</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 glass rounded-2xl p-6 border-l-4 border-brand-orange">
+                <h4 class="text-white font-semibold mb-2">Insight de Mercado</h4>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    O mercado de POS para restaurantes na Europa cobra entre <strong>€50-89/mes apenas pelo kiosk</strong> [^5^][^16^], 
+                    sem incluir app do cliente ou display de cozinha. Solucoes como Flipdish cobram <strong>€199/mes extra pelo app mobile</strong> [^16^]. 
+                    O diferencial do nosso pack e oferecer <strong>4 apps integrados por um preco unico</strong>, 
+                    com desenvolvimento customizado para a realidade da sorveteria (pedidos por peso, toppings, combinacoes).
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- OS 3 PLANOS -->
+    <section id="planos" class="py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-display text-4xl font-bold text-white mb-4">Tres Planos. Uma Visao.</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Do basico ao supremo. Cada plano e pensado para um estagio diferente do negocio. Sem horas imaginarias — precos baseados em custos reais de mercado.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-6 items-start">
+                
+                <!-- PLANO ESSENCIAL -->
+                <div class="plan-card glass rounded-3xl p-6 glow-red relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-red/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                    <div class="relative z-10">
+                        <div class="badge text-brand-red mb-3">PLANO ESSENCIAL</div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-1">Basico</h3>
+                        <p class="text-gray-500 text-sm mb-6">Para sorveterias iniciantes. Funciona, mas com limitacoes.</p>
+                        
+                        <div class="mb-6">
+                            <div class="price-tag text-4xl font-bold text-white">€1.800</div>
+                            <div class="text-gray-400 text-sm">setup unico</div>
+                            <div class="mt-2 text-brand-red font-semibold">+ €89/mes suporte</div>
+                        </div>
+
+                        <div class="space-y-3 mb-8 text-sm">
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Kiosk (1 tablet)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Cozinha basico</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-x">✗</span><span class="text-gray-500">App Admin completo</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-x">✗</span><span class="text-gray-500">PWA Cliente</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-x">✗</span><span class="text-gray-500">Elo Wallaby</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-warn">!</span><span class="text-gray-400">Suporte: email, 48h resposta</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-warn">!</span><span class="text-gray-400">Atualizacoes: trimestrais</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-warn">!</span><span class="text-gray-400">Sem modo offline</span></div>
+                        </div>
+
+                        <div class="glass rounded-xl p-4 mb-6">
+                            <div class="text-xs text-gray-500 mb-1">Custo total Ano 1</div>
+                            <div class="text-xl font-bold text-white">€2.868</div>
+                            <div class="text-xs text-brand-red mt-1">Break-even: ~7 meses</div>
+                        </div>
+
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><strong class="text-brand-red">Problemas:</strong> Sem PWA = cliente nao pede pelo celular. Sem Wallaby = pagamento manual. Sem admin = nao sabe o que vende.</p>
+                            <p><strong class="text-gray-400">Ideal para:</strong> Sorveteria pequena, 1 balcao, dono opera tudo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLANO PRO -->
+                <div class="plan-card glass rounded-3xl p-6 glow-orange relative overflow-hidden border-2 border-brand-orange/30">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-orange/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-orange text-black text-xs font-bold rounded-full">MAIS POPULAR</div>
+                    <div class="relative z-10">
+                        <div class="badge text-brand-orange mb-3">PLANO PRO</div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-1">Completo</h3>
+                        <p class="text-gray-500 text-sm mb-6">O equilibrio perfeito. Tudo que precisa para operar bem.</p>
+                        
+                        <div class="mb-6">
+                            <div class="price-tag text-4xl font-bold text-white">€4.200</div>
+                            <div class="text-gray-400 text-sm">setup unico</div>
+                            <div class="mt-2 text-brand-orange font-semibold">+ €149/mes suporte</div>
+                        </div>
+
+                        <div class="space-y-3 mb-8 text-sm">
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Kiosk (2 tablets)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Cozinha completo</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Admin (dashboard)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">PWA Cliente (QR Code)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-warn">~</span><span class="text-gray-400">Elo Wallaby (1 unidade)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Suporte: WhatsApp, 24h</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Atualizacoes: mensais</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Modo offline basico</span></div>
+                        </div>
+
+                        <div class="glass rounded-xl p-4 mb-6">
+                            <div class="text-xs text-gray-500 mb-1">Custo total Ano 1</div>
+                            <div class="text-xl font-bold text-white">€5.988</div>
+                            <div class="text-xs text-brand-orange mt-1">Break-even: ~6 meses</div>
+                        </div>
+
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><strong class="text-brand-orange">Vantagem:</strong> Cliente pede pelo celular = menos fila. Admin mostra o que vende = decisoes inteligentes.</p>
+                            <p><strong class="text-gray-400">Ideal para:</strong> Sorveteria media, 2 balcoes, equipe de 3-5 pessoas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLANO SUPREMO -->
+                <div class="plan-card glass rounded-3xl p-6 glow-green relative overflow-hidden border-2 border-brand-green/40">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-brand-green/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-brand-green text-black text-xs font-bold rounded-full">RECOMENDADO</div>
+                    <div class="relative z-10">
+                        <div class="badge text-brand-green mb-3">PLANO SUPREMO</div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-1">Master</h3>
+                        <p class="text-gray-500 text-sm mb-6">Tudo. Sem limites. A experiencia definitiva.</p>
+                        
+                        <div class="mb-6">
+                            <div class="price-tag text-4xl font-bold text-white">€8.500</div>
+                            <div class="text-gray-400 text-sm">setup unico</div>
+                            <div class="mt-2 text-brand-green font-semibold">+ €249/mes suporte</div>
+                        </div>
+
+                        <div class="space-y-3 mb-8 text-sm">
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Kiosk (ilimitado)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Cozinha + Display fisico</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">App Admin (full analytics)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">PWA Cliente (QR + Push)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Elo Wallaby (2 unidades)</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Suporte: 24/7 telefone</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Atualizacoes: continuas</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Modo offline completo</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Impressora tickets inclusa</span></div>
+                            <div class="flex items-center gap-3"><span class="feature-check">✓</span><span class="text-gray-300">Certificacao fiscal ES</span></div>
+                        </div>
+
+                        <div class="glass rounded-xl p-4 mb-6 border border-brand-green/20">
+                            <div class="text-xs text-gray-500 mb-1">Custo total Ano 1</div>
+                            <div class="text-xl font-bold text-white">€11.488</div>
+                            <div class="text-xs text-brand-green mt-1">Break-even: ~5.5 meses | Lucro Ano 1: €5.312</div>
+                        </div>
+
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <p><strong class="text-brand-green">Supremo:</strong> Duplica a receita com PWA + Kiosk. Wallaby acelera atendimento. Analytics mostra lucro real.</p>
+                            <p><strong class="text-gray-400">Ideal para:</strong> Sorveteria com ambicao, multi-balcao, franquia futura.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- DETALHAMENTO DO PACK SUPREMO -->
+    <section class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green text-xl">👑</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">Pack Supremo — Detalhamento Completo</h2>
+                    <p class="text-gray-500">O que realmente esta incluso nos €8.500 de setup</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <span class="text-brand-green">01</span> Desenvolvimento de Software
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">App Kiosk Self-Service (Vite + PWA)</span>
+                            <span class="text-brand-green font-semibold">€2.200</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">App Cozinha (Display de Pedidos)</span>
+                            <span class="text-brand-green font-semibold">€1.400</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">App Admin (Dashboard + Analytics)</span>
+                            <span class="text-brand-green font-semibold">€1.600</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">PWA Cliente (QR Code + Pedido)</span>
+                            <span class="text-brand-green font-semibold">€1.200</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Integracao Elo Wallaby + Pagamentos</span>
+                            <span class="text-brand-green font-semibold">€800</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-300 font-semibold">Subtotal Desenvolvimento</span>
+                            <span class="text-white font-bold text-lg">€7.200</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+                        <span class="text-brand-blue">02</span> Hardware & Infraestrutura
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Elo Wallaby Stand (2 unidades)</span>
+                            <span class="text-brand-blue font-semibold">€1.000</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Tablets Android (2x Samsung A9+)</span>
+                            <span class="text-brand-blue font-semibold">€400</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Impressora Térmica Epson TM-T20</span>
+                            <span class="text-brand-blue font-semibold">€280</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Configuracao e Instalacao no local</span>
+                            <span class="text-brand-blue font-semibold">€300</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-gray-300">Treinamento equipe (2h)</span>
+                            <span class="text-brand-blue font-semibold">€200</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-300 font-semibold">Subtotal Hardware + Servicos</span>
+                            <span class="text-white font-bold text-lg">€2.180</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 rounded-lg bg-brand-green/5 border border-brand-green/20">
+                        <div class="flex justify-between items-center">
+                            <span class="text-brand-green font-semibold">TOTAL PACK SUPREMO</span>
+                            <span class="text-brand-green font-bold text-xl">€8.500</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">Desconto de €880 por contrato anual de suporte</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 glass rounded-2xl p-6">
+                <h3 class="text-white font-semibold mb-4">O que a mensalidade de €249 cobre</h3>
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                    <div class="p-4 rounded-xl bg-white/5">
+                        <div class="text-brand-green font-semibold mb-2">Infraestrutura Cloud</div>
+                        <ul class="space-y-1 text-gray-400">
+                            <li>• Vercel Pro (hosting)</li>
+                            <li>• Supabase Pro (banco real-time)</li>
+                            <li>• Dominio + SSL</li>
+                            <li>• Backups diarios</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-gray-500">Custo real: ~€65/mes</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-white/5">
+                        <div class="text-brand-blue font-semibold mb-2">Suporte Tecnico</div>
+                        <ul class="space-y-1 text-gray-400">
+                            <li>• Atendimento 24/7 telefone</li>
+                            <li>• WhatsApp prioritario</li>
+                            <li>• Remote access para fixes</li>
+                            <li>• SLA: 2h resposta critica</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-gray-500">Valor mercado: ~€100/mes</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-white/5">
+                        <div class="text-brand-orange font-semibold mb-2">Evolucao Continua</div>
+                        <ul class="space-y-1 text-gray-400">
+                            <li>• Updates mensais de features</li>
+                            <li>• Security patches</li>
+                            <li>• Novos sabores no cardapio</li>
+                            <li>• Relatorios customizados</li>
+                        </ul>
+                        <div class="mt-2 text-xs text-gray-500">Valor mercado: ~€84/mes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- PWA CLIENTE EXTRA -->
+    <section id="extra" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-purple/10 flex items-center justify-center text-brand-purple text-xl">📲</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">PWA Cliente — O Extra que Vende</h2>
+                    <p class="text-gray-500">Como funciona, quanto custa separado, e porque vale a pena</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center mb-10">
+                <div>
+                    <h3 class="text-white font-semibold text-xl mb-4">Como o cliente usa</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple font-bold shrink-0">1</div>
+                            <div>
+                                <div class="text-white font-medium">Chega na sorveteria</div>
+                                <div class="text-gray-400 text-sm">Ve um QR Code na mesa/balcao</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple font-bold shrink-0">2</div>
+                            <div>
+                                <div class="text-white font-medium">Aponta o celular</div>
+                                <div class="text-gray-400 text-sm">Abre o PWA sem instalar nada</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple font-bold shrink-0">3</div>
+                            <div>
+                                <div class="text-white font-medium">Monta o pedido</div>
+                                <div class="text-gray-400 text-sm">Escolhe sabor, toppings, tamanho</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple font-bold shrink-0">4</div>
+                            <div>
+                                <div class="text-white font-medium">Paga pelo celular</div>
+                                <div class="text-gray-400 text-sm">Cartao, Bizum, ou na retirada</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center text-brand-purple font-bold shrink-0">5</div>
+                            <div>
+                                <div class="text-white font-medium">Recebe notificacao</div>
+                                <div class="text-gray-400 text-sm">"Seu pedido esta pronto!"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4">Preco do PWA separado</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-xl bg-white/5 border border-brand-purple/20">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-white font-semibold">Desenvolvimento PWA isolado</span>
+                                <span class="text-brand-purple font-bold text-xl">€1.800</span>
+                            </div>
+                            <div class="text-xs text-gray-500">Se contratado fora do pack</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-brand-green/5 border border-brand-green/20">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-white font-semibold">No Pack Supremo</span>
+                                <span class="text-brand-green font-bold text-xl">INCLUSO</span>
+                            </div>
+                            <div class="text-xs text-gray-500">Economia de €1.800 no setup</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-white/5">
+                            <div class="text-sm text-gray-300 mb-2"><strong>Beneficios do PWA:</strong></div>
+                            <ul class="text-xs text-gray-400 space-y-1">
+                                <li>• Reduz fila no balcao em ~30%</li>
+                                <li>• Cliente pede sentado = vende mais toppings</li>
+                                <li>• Coleta dados de clientes (CRM)</li>
+                                <li>• Push notifications de promocoes</li>
+                                <li>• Sem taxa de delivery (vs Glovo/Deliveroo)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 border-l-4 border-brand-purple">
+                <h4 class="text-white font-semibold mb-2">Dado de Mercado</h4>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    Solucoes como <strong>Flipdish cobram €199/mes apenas pelo app mobile</strong> do cliente [^16^], 
+                    e ainda cobram setup de €439+. No nosso Pack Supremo, o PWA esta <strong>incluso na mensalidade de €249</strong> 
+                    junto com outros 3 apps. Isso representa uma economia de <strong>€2.388/ano</strong> comparado ao Flipdish 
+                    so pelo app, sem contar os outros 3 apps que voce tambem recebe.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- ROI & VIABILIDADE -->
+    <section id="roi" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green text-xl">📈</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">ROI & Viabilidade Financeira</h2>
+                    <p class="text-gray-500">Numeros que provam que o investimento se paga</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-10">
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-5xl font-display font-bold text-brand-green mb-2">5.5x</div>
+                    <div class="text-sm text-gray-400">Retorno em 12 meses<br>(Pack Supremo)</div>
+                </div>
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-5xl font-display font-bold text-brand-orange mb-2">€1400</div>
+                    <div class="text-sm text-gray-400">Economia + Receita extra<br>por mes (estimado)</div>
+                </div>
+                <div class="glass rounded-2xl p-6 text-center">
+                    <div class="text-5xl font-display font-bold text-brand-blue mb-2">46%</div>
+                    <div class="text-sm text-gray-400">Margem de lucro<br>no Ano 1</div>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 mb-8">
+                <h3 class="text-white font-semibold mb-6">Como o Pack Supremo gera €1.400/mes de valor</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-brand-green font-semibold mb-3 text-sm uppercase tracking-wider">Economia de Custos</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">Elimina erro de pedido manual</span>
+                                <span class="text-brand-green font-semibold">€200/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">Reducao de filas (mais clientes/hora)</span>
+                                <span class="text-brand-green font-semibold">€300/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">Sem comissao Glovo/Deliveroo (15-30%)</span>
+                                <span class="text-brand-green font-semibold">€400/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-gray-300 font-semibold">Subtotal Economia</span>
+                                <span class="text-brand-green font-bold">€900/mes</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-brand-orange font-semibold mb-3 text-sm uppercase tracking-wider">Receita Extra</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">PWA Cliente = mais pedidos/mes</span>
+                                <span class="text-brand-orange font-semibold">€250/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">Upsell automatico (toppings, tamanho)</span>
+                                <span class="text-brand-orange font-semibold">€150/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                <span class="text-gray-300">Programa fidelidade (recorrencia)</span>
+                                <span class="text-brand-orange font-semibold">€100/mes</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-gray-300 font-semibold">Subtotal Receita Extra</span>
+                                <span class="text-brand-orange font-bold">€500/mes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 rounded-xl bg-brand-green/5 border border-brand-green/20 flex justify-between items-center">
+                    <span class="text-white font-semibold">Valor Total Gerado / Mes</span>
+                    <span class="text-brand-green font-bold text-2xl">€1.400</span>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6">
+                <h3 class="text-white font-semibold mb-4">Comparativo: 3 Anos de Operacao</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10 text-gray-400 text-left">
+                                <th class="pb-3 font-medium">Metrica</th>
+                                <th class="pb-3 font-medium text-brand-red">Essencial</th>
+                                <th class="pb-3 font-medium text-brand-orange">Pro</th>
+                                <th class="pb-3 font-medium text-brand-green">Supremo</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            <tr class="border-b border-white/5"><td class="py-3">Investimento total (3 anos)</td><td>€5.004</td><td>€9.564</td><td class="text-brand-green font-semibold">€17.464</td></tr>
+                            <tr class="border-b border-white/5"><td class="py-3">Retorno total (3 anos)</td><td>€12.600</td><td>€27.000</td><td class="text-brand-green font-semibold">€50.400</td></tr>
+                            <tr class="border-b border-white/5"><td class="py-3">Lucro liquido (3 anos)</td><td>€7.596</td><td>€17.436</td><td class="text-brand-green font-bold">€32.936</td></tr>
+                            <tr class="border-b border-white/5"><td class="py-3">ROI (%)</td><td>152%</td><td>182%</td><td class="text-brand-green font-bold">189%</td></tr>
+                            <tr><td class="py-3">Payback period</td><td>7 meses</td><td>6 meses</td><td class="text-brand-green font-bold">5.5 meses</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- ELO WALLABY -->
+    <section class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-10">
+                <div class="w-12 h-12 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue text-xl">🖥️</div>
+                <div>
+                    <h2 class="font-display text-3xl font-bold text-white">Elo Wallaby — O Hardware</h2>
+                    <p class="text-gray-500">Suporte self-service profissional para tablets 15"-22"</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4">Especificacoes tecnicas</h3>
+                    <div class="space-y-3 text-sm text-gray-300">
+                        <div class="flex items-start gap-3">
+                            <span class="text-brand-blue mt-0.5">▸</span>
+                            <div><strong class="text-white">Compatibilidade:</strong> Tablets Elo I-Series e X-Series (Android/Windows) de 15" a 22" [^7^]</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-brand-blue mt-0.5">▸</span>
+                            <div><strong class="text-white">Impressora:</strong> Suporte integrado para Epson TM-T20 ou Star TSP100</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-brand-blue mt-0.5">▸</span>
+                            <div><strong class="text-white">Pagamento:</strong> Suporte para leitor de cartao (opcional)</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-brand-blue mt-0.5">▸</span>
+                            <div><strong class="text-white">Material:</strong> Acrilico + metal, resistente a vandalismo</div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-brand-blue mt-0.5">▸</span>
+                            <div><strong class="text-white">Instalacao:</strong> Countertop (sobre o balcao)</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 rounded-xl bg-brand-blue/5 border border-brand-blue/20">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">Preco unitario (PB Tech NZ)</span>
+                            <span class="text-brand-blue font-bold text-lg">~€500</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">Referencia: AUD $589 [^7^] | Preco ES pode variar</div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-semibold mb-4">Por que usar Wallaby?</h3>
+                    <div class="space-y-4">
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white font-medium text-sm mb-1">Profissionalismo</div>
+                            <div class="text-gray-400 text-xs">Cliente ve um kiosk bonito, nao um tablet encostado. Transmite confianca.</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white font-medium text-sm mb-1">Seguranca</div>
+                            <div class="text-gray-400 text-xs">Tablet preso fisicamente. Sem risco de roubo ou queda.</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white font-medium text-sm mb-1">Ergonomia</div>
+                            <div class="text-gray-400 text-xs">Angulo ideal para interacao. Impressora escondida mas acessivel.</div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-white/5">
+                            <div class="text-white font-medium text-sm mb-1">Integracao limpa</div>
+                            <div class="text-gray-400 text-xs">Cabos escondidos. So aparece a tela. Design minimalista.</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-500">
+                        <strong>Alternativa sem Wallaby:</strong> Tablet em pe de acrilico generico (~€30) + suporte improvisado. 
+                        Funciona, mas parece amador e tem risco de queda.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- COMPARATIVO FINAL -->
+    <section class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-display text-3xl font-bold text-white mb-10 text-center">Qual Plano Escolher?</h2>
+            
+            <div class="glass rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-white/5">
+                                <th class="p-4 text-left text-gray-400 font-medium">Funcionalidade</th>
+                                <th class="p-4 text-center text-brand-red font-semibold">Essencial<br><span class="text-xs font-normal text-gray-500">€1.800 + €89/mes</span></th>
+                                <th class="p-4 text-center text-brand-orange font-semibold">Pro<br><span class="text-xs font-normal text-gray-500">€4.200 + €149/mes</span></th>
+                                <th class="p-4 text-center text-brand-green font-semibold">Supremo<br><span class="text-xs font-normal text-gray-500">€8.500 + €249/mes</span></th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            <tr class="border-b border-white/5"><td class="p-4 font-medium text-white">App Kiosk Self-Service</td><td class="p-4 text-center"><span class="feature-check">✓</span> 1 tablet</td><td class="p-4 text-center"><span class="feature-check">✓</span> 2 tablets</td><td class="p-4 text-center"><span class="feature-check">✓</span> Ilimitado</td></tr>
+                            <tr class="border-b border-white/5 bg-white/[0.02]"><td class="p-4 font-medium text-white">App Cozinha (Display)</td><td class="p-4 text-center"><span class="feature-check">✓</span> Basico</td><td class="p-4 text-center"><span class="feature-check">✓</span> Completo</td><td class="p-4 text-center"><span class="feature-check">✓</span> + Display fisico</td></tr>
+                            <tr class="border-b border-white/5"><td class="p-4 font-medium text-white">App Admin Dashboard</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-check">✓</span> Standard</td><td class="p-4 text-center"><span class="feature-check">✓</span> Full Analytics</td></tr>
+                            <tr class="border-b border-white/5 bg-white/[0.02]"><td class="p-4 font-medium text-white">PWA Cliente (QR Code)</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-check">✓</span> Basico</td><td class="p-4 text-center"><span class="feature-check">✓</span> + Push + Loyalty</td></tr>
+                            <tr class="border-b border-white/5"><td class="p-4 font-medium text-white">Elo Wallaby (Hardware)</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-warn">~</span> 1 unidade</td><td class="p-4 text-center"><span class="feature-check">✓</span> 2 unidades</td></tr>
+                            <tr class="border-b border-white/5 bg-white/[0.02]"><td class="p-4 font-medium text-white">Impressora de Tickets</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-check">✓</span> Epson TM-T20</td></tr>
+                            <tr class="border-b border-white/5"><td class="p-4 font-medium text-white">Modo Offline</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-check">✓</span> Basico</td><td class="p-4 text-center"><span class="feature-check">✓</span> Completo</td></tr>
+                            <tr class="border-b border-white/5 bg-white/[0.02]"><td class="p-4 font-medium text-white">Suporte Tecnico</td><td class="p-4 text-center">Email (48h)</td><td class="p-4 text-center">WhatsApp (24h)</td><td class="p-4 text-center">24/7 Telefone</td></tr>
+                            <tr class="border-b border-white/5"><td class="p-4 font-medium text-white">Atualizacoes</td><td class="p-4 text-center">Trimestrais</td><td class="p-4 text-center">Mensais</td><td class="p-4 text-center">Continuas</td></tr>
+                            <tr class="border-b border-white/5 bg-white/[0.02]"><td class="p-4 font-medium text-white">Certificacao Fiscal ES</td><td class="p-4 text-center"><span class="feature-x">✗</span></td><td class="p-4 text-center"><span class="feature-warn">~</span> Extra</td><td class="p-4 text-center"><span class="feature-check">✓</span> Incluso</td></tr>
+                            <tr class="bg-white/5"><td class="p-4 font-bold text-white">Lucro Ano 1 (estimado)</td><td class="p-4 text-center text-brand-red font-bold">€1.332</td><td class="p-4 text-center text-brand-orange font-bold">€3.012</td><td class="p-4 text-center text-brand-green font-bold text-lg">€5.312</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-8 grid md:grid-cols-3 gap-4">
+                <div class="glass rounded-xl p-4 border-l-4 border-brand-red">
+                    <div class="text-brand-red font-semibold text-sm mb-1">Escolha Essencial se...</div>
+                    <div class="text-gray-400 text-xs">Voce esta comecando, tem orcamento apertado, e aceita operar de forma basica por enquanto. Planeja upgrade em 6-12 meses.</div>
+                </div>
+                <div class="glass rounded-xl p-4 border-l-4 border-brand-orange">
+                    <div class="text-brand-orange font-semibold text-sm mb-1">Escolha Pro se...</div>
+                    <div class="text-gray-400 text-xs">Voce ja tem clientela, quer reduzir filas, e entende que tecnologia e investimento. Quer PWA mas nao precisa de Wallaby ainda.</div>
+                </div>
+                <div class="glass rounded-xl p-4 border-l-4 border-brand-green">
+                    <div class="text-brand-green font-semibold text-sm mb-1">Escolha Supremo se...</div>
+                    <div class="text-gray-400 text-xs">Voce quer a melhor experiencia possivel, planeja crescer, e entende que o diferencial tecnologico vende mais sorvete. Quer tudo pronto.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-6xl mx-auto"></div>
+
+    <!-- GRAFICOS -->
+    <section class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="font-display text-3xl font-bold text-white mb-10 text-center">Visualizacao de Dados</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-4">
+                    <img src="sandbox:///mnt/agents/output/graficos_orcamento.png" alt="Graficos de Orcamento" class="w-full rounded-xl">
+                </div>
+                <div class="glass rounded-2xl p-4">
+                    <img src="sandbox:///mnt/agents/output/graficos_orcamento_2.png" alt="Graficos de Mercado" class="w-full rounded-xl">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="py-20 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-green/5 to-transparent"></div>
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+            <h2 class="font-display text-4xl font-bold text-white mb-6">Pronto para transformar sua sorveteria?</h2>
+            <p class="text-gray-400 mb-8 text-lg">
+                Este orcamento e baseado em precos reais de mercado, pesquisados em Abril de 2026. 
+                Nao ha horas imaginarias — cada valor tem uma justificativa tecnica e comercial.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="glass px-6 py-3 rounded-xl text-sm text-gray-300">
+                    <span class="text-brand-green font-semibold">Next step:</span> Reuniao de 30min para ajustar o escopo ao seu espaco fisico
+                </div>
+            </div>
+            <div class="mt-10 pt-10 border-t border-white/10">
+                <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+                    <span>Jhin1v9 Tech</span>
+                    <span>•</span>
+                    <span>Sabadell, Catalunha</span>
+                    <span>•</span>
+                    <span>Abril 2026</span>
+                </div>
+                <div class="mt-4 text-xs text-gray-600">
+                    Fontes: Square POS [^5^], Flipdish [^16^], Toast [^8^], SoftwareAdvice [^10^], 
+                    GoodFirms 2026 [^21^], DevTechnosys [^19^], Elo Wallaby PB Tech [^7^]
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
