@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPV Self-Service Sorveteria | Sabadell Nord</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-warm { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.05); }
+        .float { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        .ice-cream-float { animation: ice-cream-float 4s ease-in-out infinite; }
+        @keyframes ice-cream-float { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-15px); } }
+        .demo-tablet { width: 100%; max-width: 400px; height: 700px; background: #000; border-radius: 40px; padding: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); margin: 0 auto; }
+        .demo-screen { width: 100%; height: 100%; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); border-radius: 30px; overflow: hidden; position: relative; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ===== SIMULADOR FULLSCREEN TABLET ===== */
+        #simuladorTablet {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background: #0f0f11;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        #simuladorTablet.ativo { display: flex; }
+
+        .tablet-frame {
+            width: 100vw;
+            height: 100vh;
+            background: #111;
+            border-radius: 0;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 1024px) {
+            .tablet-frame {
+                width: min(95vw, 1400px);
+                height: min(95vh, 950px);
+                border-radius: 48px;
+                border: 14px solid #1a1a1a;
+            }
+            .tablet-frame::before {
+                content: '';
+                position: absolute;
+                top: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 120px;
+                height: 24px;
+                background: #0a0a0a;
+                border-radius: 12px;
+                z-index: 50;
+            }
+            .tablet-frame::after {
+                content: '';
+                position: absolute;
+                top: 18px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 14px;
+                height: 14px;
+                background: #222;
+                border-radius: 50%;
+                z-index: 51;
+                box-shadow: inset 0 0 4px #000;
+            }
+        }
+
+        .kiosk-screen {
+            flex: 1;
+            background: linear-gradient(180deg, #f8f9fc 0%, #eef2f7 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: inherit;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            z-index: 40;
+        }
+
+        .bottom-nav {
+            height: 80px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 40;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        .bottom-nav button {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .bottom-nav button.ativo { color: #7c3aed; }
+        .bottom-nav button i { font-size: 22px; }
+
+        .kiosk-pages-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .kiosk-page {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 24px;
+            display: none;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .kiosk-page.ativo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .pulse-soft { animation: pulse-soft 2s infinite; }
+
+        .toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #1f2937;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .sabor-card, .extra-card, .base-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .sabor-card:active, .extra-card:active, .base-card:active { transform: scale(0.96); }
+
+        .close-kiosk {
+            position: absolute;
+            top: 56px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .close-kiosk:hover { background: rgba(0,0,0,0.6); }
+
+        @media (min-width: 1024px) {
+            .close-kiosk { top: 28px; right: 28px; }
+        }
+
+        .pay-method {
+            transition: all 0.2s;
+        }
+        .pay-method:hover {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+        }
+        .pay-method.selected {
+            border-color: #7c3aed;
+            background: #ede9fe;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+        }
+
+        .cart-item-anim { animation: popIn 0.3s ease; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- HERO -->
+    <section class="gradient-bg min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-20 w-48 h-48 bg-pink-300 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-300 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        <div class="container mx-auto px-6 relative z-10 text-center">
+            <div class="ice-cream-float inline-block mb-6">
+                <i class="fas fa-ice-cream text-8xl text-white drop-shadow-2xl"></i>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-lg">TPV Self-Service</h1>
+            <p class="text-2xl text-white/90 mb-4 font-light">Sorveteria Sabadell Nord</p>
+            <p class="text-xl text-white/80 mb-8 max-w-2xl mx-auto">Sistema completo: Kiosk + Dashboard Cozinha + Admin Total</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="px-6 py-3 bg-white/20 rounded-full text-white font-semibold backdrop-blur"><i class="fas fa-robot mr-2"></i>Automação</span>
+                <span class="px-6 py-3 bg-white/20 rounded-full text-white font-semibold backdrop-blur"><i class="fas fa-chart-line mr-2"></i>Dashboard</span>
+                <span class="px-6 py-3 bg-white/20 rounded-full text-white font-semibold backdrop-blur"><i class="fas fa-shield-alt mr-2"></i>VeriFactu</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ANÁLISE ELO WALLABY -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Elo Wallaby: O Que Vem Pronto</h2>
+                <p class="text-xl text-gray-600">Análise técnica completa do hardware</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-12">
+                <div class="bg-green-50 border-2 border-green-200 rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold text-green-700 mb-6"><i class="fas fa-box-open mr-3"></i>Na Caixa (100% Funcional)</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-check text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Display I-Series 22" Android</p><p class="text-sm text-gray-600">Qualcomm Snapdragon, 4GB RAM, 64GB, Android 12</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-check text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Suporte Wallaby Metálico</p><p class="text-sm text-gray-600">Balcão ou chão, anti-vandalismo, cabos organizados</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-check text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Impressora Epson Integrada</p><p class="text-sm text-gray-600">250mm/s, 80mm, auto-cutter, já instalada</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-check text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">EloView Core (MDM)</p><p class="text-sm text-gray-600">Kiosk mode, remote control, OTA - GRÁTIS 2 anos</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-check text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">SDK Elo Peripheral</p><p class="text-sm text-gray-600">API documentada para controlar todos os periféricos</p></div>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-green-100 rounded-xl p-4">
+                        <p class="text-green-800 font-semibold text-center"><i class="fas fa-clock mr-2"></i>Economia: ~40-50h de trabalho vs kiosk genérico</p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-3xl p-8">
+                    <h3 class="text-2xl font-bold text-blue-700 mb-6"><i class="fas fa-code mr-3"></i>O Que Programamos</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-mobile-alt text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">App Flutter (Cliente)</p><p class="text-sm text-gray-600">~80h - Telas de pedido, cardápio, pagamento</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-utensils text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Dashboard Cozinha</p><p class="text-sm text-gray-600">~20h - Fila de pedidos em tempo real</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-cog text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Dashboard Admin</p><p class="text-sm text-gray-600">~40h - Vendas, estatísticas, faturas, controle total</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-cloud text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">Backend Supabase</p><p class="text-sm text-gray-600">~30h - API REST, PostgreSQL, auth, realtime</p></div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3 mt-1"><i class="fas fa-file-invoice text-white text-sm"></i></div>
+                            <div><p class="font-semibold text-gray-800">VeriFactu 2026</p><p class="text-sm text-gray-600">~40h - Integração API AEAT, QR code fiscal</p></div>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-blue-100 rounded-xl p-4">
+                        <p class="text-blue-800 font-semibold text-center"><i class="fas fa-clock mr-2"></i>Total: ~210h de desenvolvimento profissional incluído</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto bg-gray-100 rounded-2xl p-8">
+                <h4 class="text-xl font-bold text-center text-gray-800 mb-6">Economia de Tempo: Elo vs Genérico</h4>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <span class="w-48 text-gray-700 font-semibold">Integração impressora</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 mr-4 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 h-full bg-green-500 rounded-full" style="width: 20%"></div>
+                            <div class="absolute left-0 top-0 h-full bg-red-400 rounded-full" style="width: 100%; opacity: 0.3"></div>
+                        </div>
+                        <span class="text-sm text-gray-600 w-24">4h vs 20h</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-48 text-gray-700 font-semibold">Configuração MDM</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 mr-4 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 h-full bg-green-500 rounded-full" style="width: 13%"></div>
+                            <div class="absolute left-0 top-0 h-full bg-red-400 rounded-full" style="width: 100%; opacity: 0.3"></div>
+                        </div>
+                        <span class="text-sm text-gray-600 w-24">2h vs 15h</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-48 text-gray-700 font-semibold">Suporte mensal</span>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 mr-4 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 h-full bg-green-500 rounded-full" style="width: 20%"></div>
+                            <div class="absolute left-0 top-0 h-full bg-red-400 rounded-full" style="width: 100%; opacity: 0.3"></div>
+                        </div>
+                        <span class="text-sm text-gray-600 w-24">2h vs 10h</span>
+                    </div>
+                </div>
+                <p class="text-center text-gray-600 mt-4 text-sm"><i class="fas fa-info-circle mr-2"></i>Elo Wallaby poupou 120h no 1º ano = €6.000 de economia (à €50/h)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- DEMO INTERATIVA ORIGINAL -->
+    <section class="py-20 gradient-warm">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Demo Interativa do Sistema</h2>
+                <p class="text-xl text-gray-700">Teste o app exatamente como será na sorveteria</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
+                <!-- TABLET CLIENTE -->
+                <div class="demo-tablet">
+                    <div class="demo-screen" id="demoScreen">
+                        <!-- TELA INICIAL -->
+                        <div id="telaInicial" class="h-full flex flex-col p-6 fade-in">
+                            <div class="text-center mb-8">
+                                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-ice-cream text-4xl text-white"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-white">Gelats Sabadell</h2>
+                                <p class="text-white/80">Toque para começar</p>
+                            </div>
+                            <div class="flex gap-4 mb-6">
+                                <button onclick="mudarIdioma('cat')" class="flex-1 py-3 bg-white/20 rounded-xl text-white font-semibold hover:bg-white/30 transition">Català</button>
+                                <button onclick="mudarIdioma('esp')" class="flex-1 py-3 bg-white/20 rounded-xl text-white font-semibold hover:bg-white/30 transition">Español</button>
+                            </div>
+                            <button onclick="mostrarCardapio()" class="w-full py-4 bg-white text-purple-600 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition">
+                                <i class="fas fa-play mr-2"></i>Iniciar Pedido
+                            </button>
+                            <div class="mt-auto text-center">
+                                <p class="text-white/60 text-sm">Sorveteria Artesanal desde 1985</p>
+                            </div>
+                        </div>
+
+                        <!-- TELA CARDÁPIO -->
+                        <div id="telaCardapio" class="h-full flex flex-col p-6 hidden">
+                            <div class="flex items-center mb-4">
+                                <button onclick="voltarInicial()" class="text-white mr-4"><i class="fas fa-arrow-left text-xl"></i></button>
+                                <h2 class="text-xl font-bold text-white">Escolha a Base</h2>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 overflow-y-auto hide-scrollbar flex-1">
+                                <button onclick="selecionarBase('copo')" class="bg-white/20 rounded-2xl p-4 text-center hover:bg-white/30 transition">
+                                    <i class="fas fa-glass-whiskey text-4xl text-white mb-2"></i>
+                                    <p class="text-white font-semibold">Copo</p><p class="text-white/70 text-sm">€3.50</p>
+                                </button>
+                                <button onclick="selecionarBase('cone')" class="bg-white/20 rounded-2xl p-4 text-center hover:bg-white/30 transition">
+                                    <i class="fas fa-caret-up text-4xl text-white mb-2"></i>
+                                    <p class="text-white font-semibold">Cone</p><p class="text-white/70 text-sm">€3.00</p>
+                                </button>
+                                <button onclick="selecionarBase('pote')" class="bg-white/20 rounded-2xl p-4 text-center hover:bg-white/30 transition">
+                                    <i class="fas fa-bowl-food text-4xl text-white mb-2"></i>
+                                    <p class="text-white font-semibold">Pote 500ml</p><p class="text-white/70 text-sm">€6.00</p>
+                                </button>
+                                <button onclick="selecionarBase('milkshake')" class="bg-white/20 rounded-2xl p-4 text-center hover:bg-white/30 transition">
+                                    <i class="fas fa-glass-water text-4xl text-white mb-2"></i>
+                                    <p class="text-white font-semibold">Milkshake</p><p class="text-white/70 text-sm">€4.50</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TELA SABORES -->
+                        <div id="telaSabores" class="h-full flex flex-col p-6 hidden">
+                            <div class="flex items-center mb-4">
+                                <button onclick="voltarCardapio()" class="text-white mr-4"><i class="fas fa-arrow-left text-xl"></i></button>
+                                <h2 class="text-xl font-bold text-white">Escolha até 3 Sabores</h2>
+                            </div>
+                            <div class="text-center mb-4">
+                                <span id="contadorSabores" class="bg-white text-purple-600 px-4 py-1 rounded-full font-bold">0/3</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 overflow-y-auto hide-scrollbar flex-1">
+                                <button onclick="toggleSabor('vainilla')" id="sabor-vainilla" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-yellow-200 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🍦</span></div>
+                                    <p class="text-white font-semibold text-sm">Baunilha</p>
+                                </button>
+                                <button onclick="toggleSabor('chocolate')" id="sabor-chocolate" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-amber-800 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🍫</span></div>
+                                    <p class="text-white font-semibold text-sm">Chocolate</p>
+                                </button>
+                                <button onclick="toggleSabor('morango')" id="sabor-morango" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-pink-400 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🍓</span></div>
+                                    <p class="text-white font-semibold text-sm">Morango</p>
+                                </button>
+                                <button onclick="toggleSabor('menta')" id="sabor-menta" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-green-300 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🌿</span></div>
+                                    <p class="text-white font-semibold text-sm">Menta</p>
+                                </button>
+                                <button onclick="toggleSabor('cookie')" id="sabor-cookie" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-amber-600 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🍪</span></div>
+                                    <p class="text-white font-semibold text-sm">Cookies</p>
+                                </button>
+                                <button onclick="toggleSabor('manga')" id="sabor-manga" class="bg-white/20 rounded-xl p-3 text-center hover:bg-white/30 transition sabor-btn">
+                                    <div class="w-12 h-12 bg-yellow-400 rounded-full mx-auto mb-2 flex items-center justify-center"><span class="text-2xl">🥭</span></div>
+                                    <p class="text-white font-semibold text-sm">Manga</p>
+                                </button>
+                            </div>
+                            <button onclick="mostrarCarrinho()" id="btnContinuar" class="w-full py-3 bg-white text-purple-600 rounded-xl font-bold mt-4 opacity-50" disabled>
+                                Continuar <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+
+                        <!-- TELA CARRINHO -->
+                        <div id="telaCarrinho" class="h-full flex flex-col p-6 hidden">
+                            <div class="flex items-center mb-4">
+                                <button onclick="voltarSabores()" class="text-white mr-4"><i class="fas fa-arrow-left text-xl"></i></button>
+                                <h2 class="text-xl font-bold text-white">Seu Pedido</h2>
+                            </div>
+                            <div class="bg-white/20 rounded-2xl p-4 mb-4 flex-1 overflow-y-auto hide-scrollbar">
+                                <div id="resumoPedido" class="space-y-3"></div>
+                                <div class="border-t border-white/30 pt-3 mt-3">
+                                    <div class="flex justify-between text-white mb-2"><span>Subtotal</span><span id="subtotal">€0.00</span></div>
+                                    <div class="flex justify-between text-white font-bold text-lg"><span>Total</span><span id="total">€0.00</span></div>
+                                </div>
+                            </div>
+                            <button onclick="mostrarPagamento()" class="w-full py-4 bg-green-400 text-white rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition">
+                                <i class="fas fa-credit-card mr-2"></i>Pagar €<span id="totalBtn">0.00</span>
+                            </button>
+                        </div>
+
+                        <!-- TELA PAGAMENTO -->
+                        <div id="telaPagamento" class="h-full flex flex-col p-6 hidden">
+                            <h2 class="text-xl font-bold text-white text-center mb-6">Forma de Pagamento</h2>
+                            <div class="space-y-4 flex-1">
+                                <button onclick="processarPagamento('cartao')" class="w-full py-4 bg-white/20 rounded-2xl text-white font-semibold hover:bg-white/30 transition flex items-center justify-center">
+                                    <i class="fas fa-credit-card text-2xl mr-4"></i>
+                                    <div class="text-left"><p class="font-bold">Cartão</p><p class="text-sm text-white/70">Débito/Crédito</p></div>
+                                </button>
+                                <button onclick="processarPagamento('dinheiro')" class="w-full py-4 bg-white/20 rounded-2xl text-white font-semibold hover:bg-white/30 transition flex items-center justify-center">
+                                    <i class="fas fa-money-bill-wave text-2xl mr-4"></i>
+                                    <div class="text-left"><p class="font-bold">Dinheiro</p><p class="text-sm text-white/70">Pague no caixa</p></div>
+                                </button>
+                                <button onclick="processarPagamento('qr')" class="w-full py-4 bg-white/20 rounded-2xl text-white font-semibold hover:bg-white/30 transition flex items-center justify-center">
+                                    <i class="fas fa-qrcode text-2xl mr-4"></i>
+                                    <div class="text-left"><p class="font-bold">Bizum/QR</p><p class="text-sm text-white/70">Pagamento instantâneo</p></div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TELA CONFIRMAÇÃO -->
+                        <div id="telaConfirmacao" class="h-full flex flex-col p-6 hidden">
+                            <div class="flex-1 flex flex-col items-center justify-center text-center">
+                                <div class="w-24 h-24 bg-green-400 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                                    <i class="fas fa-check text-4xl text-white"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Pedido Confirmado!</h2>
+                                <p class="text-white/80 mb-6">Número do pedido</p>
+                                <div class="bg-white rounded-2xl px-8 py-4 mb-6">
+                                    <span class="text-4xl font-bold text-purple-600">#042</span>
+                                </div>
+                                <div class="bg-white/20 rounded-xl p-4 mb-6 w-full">
+                                    <p class="text-white text-sm mb-2">QR Code VeriFactu</p>
+                                    <div class="w-32 h-32 bg-white mx-auto rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-qrcode text-6xl text-gray-800"></i>
+                                    </div>
+                                </div>
+                                <p class="text-white/70 text-sm">Tempo estimado: 3 minutos</p>
+                            </div>
+                            <button onclick="voltarInicial()" class="w-full py-3 bg-white/20 rounded-xl text-white font-semibold">
+                                <i class="fas fa-plus mr-2"></i>Novo Pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD ADMIN DEMO -->
+                <div class="demo-tablet" style="background: #1a1a2e;">
+                    <div class="demo-screen" style="background: linear-gradient(180deg, #16213e 0%, #0f3460 100%);">
+                        <div class="p-4 border-b border-white/10">
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-white font-bold text-lg"><i class="fas fa-chart-line mr-2"></i>Admin Dashboard</h2>
+                                <span class="text-green-400 text-xs">● Online</span>
+                            </div>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-3">
+                            <div class="bg-white/10 rounded-xl p-3">
+                                <p class="text-white/60 text-xs">Vendas Hoje</p>
+                                <p class="text-white text-xl font-bold">€847.50</p>
+                                <p class="text-green-400 text-xs">↑ 12% vs ontem</p>
+                            </div>
+                            <div class="bg-white/10 rounded-xl p-3">
+                                <p class="text-white/60 text-xs">Pedidos</p>
+                                <p class="text-white text-xl font-bold">42</p>
+                                <p class="text-blue-400 text-xs">3 em preparo</p>
+                            </div>
+                            <div class="bg-white/10 rounded-xl p-3">
+                                <p class="text-white/60 text-xs">Ticket Médio</p>
+                                <p class="text-white text-xl font-bold">€4.20</p>
+                                <p class="text-yellow-400 text-xs">↑ €0.30</p>
+                            </div>
+                            <div class="bg-white/10 rounded-xl p-3">
+                                <p class="text-white/60 text-xs">Estoque</p>
+                                <p class="text-white text-xl font-bold">85%</p>
+                                <p class="text-orange-400 text-xs">Baunilha baixo</p>
+                            </div>
+                        </div>
+                        <div class="px-4 mb-4">
+                            <div class="bg-white/10 rounded-xl p-3">
+                                <p class="text-white/60 text-xs mb-2">Vendas Semanais</p>
+                                <div class="flex items-end justify-between h-24 gap-1">
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 40%"></div>
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 65%"></div>
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 45%"></div>
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 80%"></div>
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 55%"></div>
+                                    <div class="flex-1 bg-blue-500 rounded-t" style="height: 90%"></div>
+                                    <div class="flex-1 bg-green-500 rounded-t" style="height: 70%"></div>
+                                </div>
+                                <div class="flex justify-between text-white/40 text-xs mt-1">
+                                    <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sab</span><span>Dom</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 flex-1 overflow-hidden">
+                            <p class="text-white/60 text-xs mb-2">Pedidos Recentes</p>
+                            <div class="space-y-2">
+                                <div class="bg-white/10 rounded-lg p-2 flex justify-between items-center">
+                                    <div><p class="text-white text-sm font-semibold">#041</p><p class="text-white/60 text-xs">Copo - 3 sabores</p></div>
+                                    <span class="text-green-400 text-xs">Concluído</span>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2 flex justify-between items-center">
+                                    <div><p class="text-white text-sm font-semibold">#042</p><p class="text-white/60 text-xs">Milkshake - Menta</p></div>
+                                    <span class="text-yellow-400 text-xs">Em preparo</span>
+                                </div>
+                                <div class="bg-white/10 rounded-lg p-2 flex justify-between items-center">
+                                    <div><p class="text-white text-sm font-semibold">#043</p><p class="text-white/60 text-xs">Cone - Chocolate</p></div>
+                                    <span class="text-blue-400 text-xs">Novo</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10">
+                            <div class="grid grid-cols-4 gap-2">
+                                <button class="text-center text-white/60 hover:text-white"><i class="fas fa-home text-lg mb-1"></i><p class="text-xs">Início</p></button>
+                                <button class="text-center text-white/60 hover:text-white"><i class="fas fa-receipt text-lg mb-1"></i><p class="text-xs">Faturas</p></button>
+                                <button class="text-center text-white/60 hover:text-white"><i class="fas fa-box text-lg mb-1"></i><p class="text-xs">Estoque</p></button>
+                                <button class="text-center text-white/60 hover:text-white"><i class="fas fa-cog text-lg mb-1"></i><p class="text-xs">Config</p></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center max-w-2xl mx-auto">
+                <div class="flex justify-center gap-8">
+                    <div class="flex items-center"><div class="w-4 h-4 bg-purple-500 rounded mr-2"></div><span class="text-gray-700 text-sm">App Cliente (Kiosk)</span></div>
+                    <div class="flex items-center"><div class="w-4 h-4 bg-blue-900 rounded mr-2"></div><span class="text-gray-700 text-sm">Dashboard Admin</span></div>
+                </div>
+                <p class="text-gray-600 mt-4 text-sm"><i class="fas fa-info-circle mr-2"></i>Clique nos botões do tablet roxo para simular um pedido real</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPERIÊNCIA KIOSK FULLSCREEN -->
+    <section class="py-20 bg-gray-900 text-white">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">Experimente o Kiosk em Tela Cheia</h2>
+            <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">Simulação realista de um tablet de autoatendimento com navegação por toque, carrinho inteligente e pagamento integrado.</p>
+            <button onclick="abrirSimulador()" class="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full font-bold text-xl shadow-2xl hover:scale-105 transition pulse-soft">
+                <i class="fas fa-tablet-alt"></i>
+                Abrir Simulador de Tablet
+            </button>
+            <div class="mt-10 flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+                <span class="flex items-center gap-2"><i class="fas fa-wifi text-green-400"></i> Status Bar Simulada</span>
+                <span class="flex items-center gap-2"><i class="fas fa-shopping-cart text-purple-400"></i> Carrinho em Tempo Real</span>
+                <span class="flex items-center gap-2"><i class="fas fa-qrcode text-pink-400"></i> Pagamento Bizum/QR</span>
+                <span class="flex items-center gap-2"><i class="fas fa-receipt text-yellow-400"></i> Fatura VeriFactu</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- SIMULADOR FULLSCREEN OVERLAY -->
+    <div id="simuladorTablet">
+        <div class="tablet-frame">
+            <div class="kiosk-screen">
+                <button class="close-kiosk" onclick="fecharSimulador()" aria-label="Fechar simulador"><i class="fas fa-times"></i></button>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div id="kioskClock">12:00</div>
+                    <div class="flex items-center gap-4">
+                        <i class="fas fa-wifi text-green-500"></i>
+                        <i class="fas fa-battery-full text-green-500"></i>
+                    </div>
+                </div>
+
+                <!-- Toast -->
+                <div id="kioskToast" class="toast">Mensagem</div>
+
+                <!-- PÁGINAS -->
+                <div class="kiosk-pages-wrapper">
+                    <!-- HOME -->
+                    <div id="pageHome" class="kiosk-page ativo">
+                        <div class="text-center mb-8">
+                            <div class="w-24 h-24 bg-gradient-to-tr from-purple-500 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                <i class="fas fa-ice-cream text-5xl text-white"></i>
+                            </div>
+                            <h2 class="text-3xl font-extrabold text-gray-800">Gelats Sabadell</h2>
+                            <p class="text-gray-500">Sorveteria Artesanal desde 1985</p>
+                        </div>
+
+                        <!-- Carrossel de Promoções -->
+                        <div class="mb-8">
+                            <div class="bg-gradient-to-r from-pink-500 to-rose-400 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                                <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full"></div>
+                                <div class="absolute right-10 bottom-0 w-20 h-20 bg-white/20 rounded-full"></div>
+                                <p class="text-sm font-semibold uppercase tracking-wider opacity-90">Destaque do Dia</p>
+                                <h3 class="text-2xl font-bold mt-1">Milkshake Duo</h3>
+                                <p class="text-white/90 text-sm mt-1">2 milkshakes por €7.50</p>
+                                <button onclick="pedidoRapidoDuo()" class="mt-4 px-5 py-2 bg-white text-rose-500 rounded-full font-bold text-sm shadow hover:scale-105 transition">Pedir Agora</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <button onclick="navegarPara('cardapio')" class="base-card bg-white rounded-2xl p-5 shadow text-left border border-gray-100">
+                                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3 text-purple-600 text-xl"><i class="fas fa-utensils"></i></div>
+                                <p class="font-bold text-gray-800">Novo Pedido</p>
+                                <p class="text-xs text-gray-500">Monte seu sorvete</p>
+                            </button>
+                            <button onclick="navegarPara('pedidos')" class="base-card bg-white rounded-2xl p-5 shadow text-left border border-gray-100">
+                                <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-3 text-pink-600 text-xl"><i class="fas fa-history"></i></div>
+                                <p class="font-bold text-gray-800">Meus Pedidos</p>
+                                <p class="text-xs text-gray-500">Últimos 3 pedidos</p>
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-5 shadow border border-gray-100">
+                            <h4 class="font-bold text-gray-800 mb-3">Seu Pedido em Preparo</h4>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm">Pedido <span class="font-bold text-purple-600">#042</span></p>
+                                    <p class="text-gray-400 text-xs">Milkshake - Menta</p>
+                                </div>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">Em preparo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARDÁPIO -->
+                    <div id="pageCardapio" class="kiosk-page">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Escolha a Base</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="selecionarBaseKiosk('copo')" class="base-card bg-white rounded-2xl p-5 shadow border border-gray-100 text-center">
+                                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">🥤</div>
+                                <p class="font-bold text-gray-800">Copo</p>
+                                <p class="text-purple-600 font-semibold">€3.50</p>
+                            </button>
+                            <button onclick="selecionarBaseKiosk('cone')" class="base-card bg-white rounded-2xl p-5 shadow border border-gray-100 text-center">
+                                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">🍦</div>
+                                <p class="font-bold text-gray-800">Cone</p>
+                                <p class="text-purple-600 font-semibold">€3.00</p>
+                            </button>
+                            <button onclick="selecionarBaseKiosk('pote')" class="base-card bg-white rounded-2xl p-5 shadow border border-gray-100 text-center">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">🍨</div>
+                                <p class="font-bold text-gray-800">Pote 500ml</p>
+                                <p class="text-purple-600 font-semibold">€6.00</p>
+                            </button>
+                            <button onclick="selecionarBaseKiosk('milkshake')" class="base-card bg-white rounded-2xl p-5 shadow border border-gray-100 text-center">
+                                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">🥛</div>
+                                <p class="font-bold text-gray-800">Milkshake</p>
+                                <p class="text-purple-600 font-semibold">€4.50</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SABORES -->
+                    <div id="pageSabores" class="kiosk-page">
+                        <div class="flex items-center gap-3 mb-4">
+                            <button onclick="navegarPara('cardapio')" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center text-gray-600"><i class="fas fa-arrow-left"></i></button>
+                            <h2 class="text-2xl font-bold text-gray-800">Escolha os Sabores</h2>
+                        </div>
+                        <div class="flex justify-center mb-5">
+                            <span id="contadorSaboresKiosk" class="bg-purple-600 text-white px-5 py-1.5 rounded-full font-bold shadow">0/3</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="toggleSaborKiosk('vainilla')" id="kiosk-sabor-vainilla" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-yellow-200 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🍦</div>
+                                <p class="font-bold text-gray-800 text-sm">Baunilha</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('chocolate')" id="kiosk-sabor-chocolate" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-amber-800 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🍫</div>
+                                <p class="font-bold text-gray-800 text-sm">Chocolate</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('morango')" id="kiosk-sabor-morango" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-pink-400 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🍓</div>
+                                <p class="font-bold text-gray-800 text-sm">Morango</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('menta')" id="kiosk-sabor-menta" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-green-300 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🌿</div>
+                                <p class="font-bold text-gray-800 text-sm">Menta</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('cookie')" id="kiosk-sabor-cookie" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-amber-600 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🍪</div>
+                                <p class="font-bold text-gray-800 text-sm">Cookies</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('manga')" id="kiosk-sabor-manga" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-yellow-400 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🥭</div>
+                                <p class="font-bold text-gray-800 text-sm">Manga</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('coco')" id="kiosk-sabor-coco" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-stone-100 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🥥</div>
+                                <p class="font-bold text-gray-800 text-sm">Coco</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('cafe')" id="kiosk-sabor-cafe" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-amber-900 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">☕</div>
+                                <p class="font-bold text-gray-800 text-sm">Café</p>
+                            </button>
+                            <button onclick="toggleSaborKiosk('limao')" id="kiosk-sabor-limao" class="sabor-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="w-14 h-14 bg-lime-300 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🍋</div>
+                                <p class="font-bold text-gray-800 text-sm">Limão</p>
+                            </button>
+                        </div>
+                        <button onclick="navegarPara('extras')" id="btnContinuarKiosk" class="w-full py-4 bg-gray-300 text-white rounded-2xl font-bold mt-6 opacity-60" disabled>Continuar</button>
+                    </div>
+
+                    <!-- EXTRAS -->
+                    <div id="pageExtras" class="kiosk-page">
+                        <div class="flex items-center gap-3 mb-4">
+                            <button onclick="navegarPara('sabores')" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center text-gray-600"><i class="fas fa-arrow-left"></i></button>
+                            <h2 class="text-2xl font-bold text-gray-800">Adicione Toppings</h2>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="toggleExtraKiosk('granola')" id="kiosk-extra-granola" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🌾</div>
+                                <p class="font-bold text-gray-800 text-sm">Granola</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                            <button onclick="toggleExtraKiosk('calda_chocolate')" id="kiosk-extra-calda_chocolate" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🍫</div>
+                                <p class="font-bold text-gray-800 text-sm">Calda Chocolate</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                            <button onclick="toggleExtraKiosk('chantilly')" id="kiosk-extra-chantilly" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🍥</div>
+                                <p class="font-bold text-gray-800 text-sm">Chantilly</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                            <button onclick="toggleExtraKiosk('amendoim')" id="kiosk-extra-amendoim" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🥜</div>
+                                <p class="font-bold text-gray-800 text-sm">Amendoim</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                            <button onclick="toggleExtraKiosk('cereja')" id="kiosk-extra-cereja" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🍒</div>
+                                <p class="font-bold text-gray-800 text-sm">Cereja</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                            <button onclick="toggleExtraKiosk('oreo')" id="kiosk-extra-oreo" class="extra-card bg-white rounded-2xl p-4 shadow border border-gray-100 text-center">
+                                <div class="text-3xl mb-2">🍪</div>
+                                <p class="font-bold text-gray-800 text-sm">Oreo</p>
+                                <p class="text-purple-600 text-sm font-semibold">+€0.50</p>
+                            </button>
+                        </div>
+                        <button onclick="navegarPara('carrinho')" class="w-full py-4 bg-purple-600 text-white rounded-2xl font-bold mt-6 shadow-lg hover:bg-purple-700 transition">Revisar Pedido</button>
+                    </div>
+
+                    <!-- CARRINHO -->
+                    <div id="pageCarrinho" class="kiosk-page">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Seu Pedido</h2>
+                        <div class="bg-white rounded-2xl p-5 shadow border border-gray-100 mb-4">
+                            <div id="kioskResumoPedido" class="space-y-3"></div>
+                            <div class="border-t border-gray-100 pt-3 mt-3 space-y-1 text-sm">
+                                <div class="flex justify-between text-gray-600"><span>Subtotal</span><span id="kioskSubtotal">€0.00</span></div>
+                                <div class="flex justify-between text-gray-600"><span>Taxa de serviço</span><span>€0.30</span></div>
+                                <div class="flex justify-between text-gray-800 font-bold text-lg"><span>Total</span><span id="kioskTotal">€0.00</span></div>
+                            </div>
+                        </div>
+                        <button onclick="navegarPara('pagamento')" class="w-full py-4 bg-green-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-green-600 transition">
+                            Pagar €<span id="kioskTotalBtn">0.00</span>
+                        </button>
+                        <button onclick="limparPedidoKiosk()" class="w-full py-3 mt-3 text-gray-400 font-semibold text-sm">Cancelar pedido</button>
+                    </div>
+
+                    <!-- PAGAMENTO -->
+                    <div id="pagePagamento" class="kiosk-page">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pagamento</h2>
+                        <div class="space-y-3 mb-6">
+                            <button onclick="selecionarPagamento('cartao')" id="pay-cartao" class="pay-method w-full bg-white rounded-2xl p-4 border-2 border-gray-100 flex items-center gap-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl"><i class="fas fa-credit-card"></i></div>
+                                <div class="text-left"><p class="font-bold text-gray-800">Cartão</p><p class="text-gray-400 text-xs">Débito ou Crédito</p></div>
+                            </button>
+                            <button onclick="selecionarPagamento('dinheiro')" id="pay-dinheiro" class="pay-method w-full bg-white rounded-2xl p-4 border-2 border-gray-100 flex items-center gap-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl"><i class="fas fa-money-bill-wave"></i></div>
+                                <div class="text-left"><p class="font-bold text-gray-800">Dinheiro</p><p class="text-gray-400 text-xs">Pague no caixa</p></div>
+                            </button>
+                            <button onclick="selecionarPagamento('qr')" id="pay-qr" class="pay-method w-full bg-white rounded-2xl p-4 border-2 border-gray-100 flex items-center gap-4">
+                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-xl"><i class="fas fa-qrcode"></i></div>
+                                <div class="text-left"><p class="font-bold text-gray-800">Bizum / QR</p><p class="text-gray-400 text-xs">Pagamento instantâneo</p></div>
+                            </button>
+                        </div>
+                        <div id="pagamentoAnimacao" class="hidden text-center py-6">
+                            <div class="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-gray-600 font-medium">Processando pagamento...</p>
+                        </div>
+                        <button id="btnConfirmarPagamento" onclick="confirmarPagamento()" class="w-full py-4 bg-gray-300 text-white rounded-2xl font-bold opacity-60" disabled>Confirmar Pagamento</button>
+                    </div>
+
+                    <!-- CONFIRMAÇÃO -->
+                    <div id="pageConfirmacao" class="kiosk-page">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="w-28 h-28 bg-gradient-to-tr from-green-400 to-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-xl animate-bounce">
+                                <i class="fas fa-check text-5xl text-white"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-800 mb-2">Pedido Confirmado!</h2>
+                            <p class="text-gray-500 mb-6">Número do seu pedido</p>
+                            <div class="bg-white rounded-3xl px-10 py-5 shadow-lg mb-6">
+                                <span id="kioskNumeroPedido" class="text-5xl font-extrabold text-purple-600">#042</span>
+                            </div>
+                            <div class="bg-white rounded-2xl p-5 shadow border border-gray-100 w-full max-w-xs mb-6">
+                                <p class="text-gray-500 text-sm mb-2">QR Code VeriFactu</p>
+                                <div class="w-36 h-36 bg-gray-100 mx-auto rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-qrcode text-7xl text-gray-800"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 text-sm">Tempo estimado: <span class="font-bold text-gray-600">3 minutos</span></p>
+                            <button onclick="voltarHomeKiosk()" class="mt-8 px-8 py-3 bg-purple-600 text-white rounded-full font-bold shadow hover:bg-purple-700 transition">Novo Pedido</button>
+                        </div>
+                    </div>
+
+                    <!-- PEDIDOS (histórico mock) -->
+                    <div id="pagePedidos" class="kiosk-page">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Meus Pedidos</h2>
+                        <div class="space-y-3">
+                            <div class="bg-white rounded-2xl p-4 shadow border border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-gray-800">#041</p>
+                                    <p class="text-gray-500 text-sm">Copo • Baunilha, Chocolate</p>
+                                </div>
+                                <span class="text-green-600 font-bold">€3.50</span>
+                            </div>
+                            <div class="bg-white rounded-2xl p-4 shadow border border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-gray-800">#039</p>
+                                    <p class="text-gray-500 text-sm">Milkshake • Menta</p>
+                                </div>
+                                <span class="text-green-600 font-bold">€4.50</span>
+                            </div>
+                            <div class="bg-white rounded-2xl p-4 shadow border border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-gray-800">#035</p>
+                                    <p class="text-gray-500 text-sm">Pote 500ml • Morango, Cookies</p>
+                                </div>
+                                <span class="text-green-600 font-bold">€6.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Nav -->
+                <div class="bottom-nav">
+                    <button id="navHome" onclick="navegarPara('home')" class="ativo"><i class="fas fa-home"></i><span>Início</span></button>
+                    <button id="navCardapio" onclick="navegarPara('cardapio')"><i class="fas fa-utensils"></i><span>Cardápio</span></button>
+                    <button id="navCarrinho" onclick="navegarPara('carrinho')" class="relative">
+                        <i class="fas fa-shopping-cart"></i><span>Carrinho</span>
+                        <span id="badgeCarrinho" class="hidden absolute top-0 right-4 w-5 h-5 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                    </button>
+                    <button id="navPedidos" onclick="navegarPara('pedidos')"><i class="fas fa-receipt"></i><span>Pedidos</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD COZINHA -->
+    <section class="py-20 bg-gray-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Dashboard da Cozinha</h2>
+                <p class="text-xl text-gray-400">Tela para quem prepara os pedidos - em tempo real</p>
+            </div>
+            <div class="max-w-5xl mx-auto bg-gray-800 rounded-3xl p-8 shadow-2xl">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-2xl font-bold">Fila de Pedidos</h3>
+                        <p class="text-gray-400">Atualização automática</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="text-center"><span class="text-3xl font-bold text-yellow-400">3</span><p class="text-xs text-gray-400">Em espera</p></div>
+                        <div class="text-center"><span class="text-3xl font-bold text-green-400">2</span><p class="text-xs text-gray-400">Preparando</p></div>
+                        <div class="text-center"><span class="text-3xl font-bold text-blue-400">38</span><p class="text-xs text-gray-400">Hoje</p></div>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-yellow-500/20 border-2 border-yellow-500 rounded-2xl p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-3xl font-bold text-yellow-400">#042</span>
+                            <span class="text-yellow-400 text-sm">2 min</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-lg"><i class="fas fa-glass-whiskey mr-2"></i>Copo 500ml</p>
+                            <p class="text-gray-300 text-sm">• Baunilha</p>
+                            <p class="text-gray-300 text-sm">• Chocolate</p>
+                            <p class="text-gray-300 text-sm">• Menta</p>
+                            <p class="text-gray-300 text-sm mt-2"><i class="fas fa-plus mr-1"></i>Granola, Calda de chocolate</p>
+                        </div>
+                        <button class="w-full py-3 bg-yellow-500 text-gray-900 rounded-xl font-bold hover:bg-yellow-400 transition">Iniciar Preparo</button>
+                    </div>
+                    <div class="bg-green-500/20 border-2 border-green-500 rounded-2xl p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-3xl font-bold text-green-400">#041</span>
+                            <span class="text-green-400 text-sm">Concluído</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-lg"><i class="fas fa-caret-up mr-2"></i>Cone</p>
+                            <p class="text-gray-300 text-sm">• Morango</p>
+                            <p class="text-gray-300 text-sm">• Cookies</p>
+                        </div>
+                        <div class="w-full py-3 bg-green-500/30 text-green-400 rounded-xl font-bold text-center">Pronto para entrega</div>
+                    </div>
+                    <div class="bg-blue-500/20 border-2 border-blue-500 rounded-2xl p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-3xl font-bold text-blue-400">#043</span>
+                            <span class="text-blue-400 text-sm">Novo</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-lg"><i class="fas fa-glass-water mr-2"></i>Milkshake</p>
+                            <p class="text-gray-300 text-sm">• Menta (somente)</p>
+                            <p class="text-gray-300 text-sm mt-2"><i class="fas fa-plus mr-1"></i>Sem açúcar</p>
+                        </div>
+                        <button class="w-full py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-400 transition">Ver Detalhes</button>
+                    </div>
+                </div>
+                <div class="mt-8 flex items-center justify-center gap-8 text-gray-400 text-sm">
+                    <span><i class="fas fa-wifi mr-2 text-green-400"></i>Conectado ao Kiosk</span>
+                    <span><i class="fas fa-print mr-2 text-green-400"></i>Impressora OK</span>
+                    <span><i class="fas fa-bell mr-2 text-yellow-400"></i>Som: ON</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SISTEMA ADMIN -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Sistema de Administração Total</h2>
+                <p class="text-xl text-gray-600">Tudo que o dono precisa para gerenciar o negócio</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-chart-line text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Relatórios & Analytics</h3>
+                    <ul class="text-sm text-blue-100 space-y-1">
+                        <li>• Vendas por hora/dia/mês</li>
+                        <li>• Produtos mais vendidos</li>
+                        <li>• Ticket médio evolução</li>
+                        <li>• Comparativo períodos</li>
+                        <li>• Exportar Excel/PDF</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-file-invoice text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Faturação & VeriFactu</h3>
+                    <ul class="text-sm text-purple-100 space-y-1">
+                        <li>• Faturas simplificadas auto</li>
+                        <li>• QR Code VeriFactu 2026</li>
+                        <li>• Envio AEAT integrado</li>
+                        <li>• Histórico 4 anos (legal)</li>
+                        <li>• Exportar contabilidade</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-box text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Controle de Estoque</h3>
+                    <ul class="text-sm text-green-100 space-y-1">
+                        <li>• Alertas de baixo estoque</li>
+                        <li>• Consumo por período</li>
+                        <li>• Previsão de compra</li>
+                        <li>• Perdas e desperdício</li>
+                        <li>• Custo de produção</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-users text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Gestão de Clientes</h3>
+                    <ul class="text-sm text-orange-100 space-y-1">
+                        <li>• Base de clientes</li>
+                        <li>• Programa de fidelidade</li>
+                        <li>• Cupons e descontos</li>
+                        <li>• Aniversariantes</li>
+                        <li>• Marketing direcionado</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-cog text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Configurações</h3>
+                    <ul class="text-sm text-pink-100 space-y-1">
+                        <li>• Alterar cardápio (fotos, preços)</li>
+                        <li>• Horários de funcionamento</li>
+                        <li>• Formas de pagamento</li>
+                        <li>• Usuários e permissões</li>
+                        <li>• Backup manual</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white hover-scale shadow-xl">
+                    <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-mobile-alt text-2xl"></i></div>
+                    <h3 class="text-xl font-bold mb-2">App do Dono</h3>
+                    <ul class="text-sm text-indigo-100 space-y-1">
+                        <li>• Acesso pelo celular</li>
+                        <li>• Notificações em tempo real</li>
+                        <li>• Fechamento de caixa remoto</li>
+                        <li>• Estatísticas diárias</li>
+                        <li>• Alertas de problemas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ORÇAMENTO -->
+    <section class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-4">Orçamento Completo</h2>
+            <p class="text-center text-gray-600 mb-12">Incluindo Kiosk + Dashboard Cozinha + Admin Total</p>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-200">
+                    <div class="bg-gradient-to-r from-gray-600 to-gray-700 p-6 text-white">
+                        <h3 class="text-2xl font-bold mb-2">Opção Econômica</h3>
+                        <p class="text-gray-300">Kiosk Chinês Genérico</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-8">
+                            <span class="text-5xl font-bold text-gray-800">€638</span>
+                            <span class="text-gray-500"> hardware</span>
+                            <p class="text-2xl text-gray-600 mt-2">+ €150/mês</p>
+                        </div>
+                        <ul class="space-y-3 mb-8 text-sm">
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>Display 21" Android genérico</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>Impressora térmica básica</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>App Cliente Flutter</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>Dashboard Cozinha (básico)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>Dashboard Admin (essencial)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check text-green-500 mr-3"></i>VeriFactu 2026</li>
+                            <li class="flex items-center text-yellow-600"><i class="fas fa-exclamation-triangle mr-3"></i>Manutenção frequente</li>
+                        </ul>
+                        <div class="bg-gray-100 rounded-xl p-4">
+                            <p class="text-sm text-gray-600 text-center"><strong>Ideal para:</strong> Testar conceito, orçamento limitado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-purple-500 transform scale-105 relative">
+                    <div class="absolute top-0 right-0 bg-purple-500 text-white px-4 py-1 rounded-bl-xl font-bold">RECOMENDADO</div>
+                    <div class="gradient-bg p-6 text-white">
+                        <h3 class="text-2xl font-bold mb-2">Opção Profissional</h3>
+                        <p class="text-purple-200">Elo Wallaby + Sistema Completo</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-8">
+                            <span class="text-5xl font-bold text-purple-600">€1.508</span>
+                            <span class="text-gray-500"> hardware</span>
+                            <p class="text-2xl text-purple-600 mt-2 font-bold">+ €250/mês</p>
+                        </div>
+                        <ul class="space-y-3 mb-8 text-sm">
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>Elo I-Series 22" Android (Qualcomm)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>Suporte Wallaby metálico profissional</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>Impressora Epson integrada</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>App Cliente Flutter (premium)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>Dashboard Cozinha (completo)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>Dashboard Admin (6 módulos)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>App do Dono (mobile)</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>VeriFactu + Backup 4 anos</li>
+                            <li class="flex items-center text-gray-700"><i class="fas fa-check-circle text-purple-500 mr-3"></i>EloView MDM (2 anos grátis)</li>
+                            <li class="flex items-center text-purple-600 font-semibold"><i class="fas fa-star mr-3"></i>Suporte 100% remoto</li>
+                        </ul>
+                        <div class="bg-purple-100 rounded-xl p-4">
+                            <p class="text-sm text-purple-800 text-center font-semibold"><i class="fas fa-rocket mr-2"></i>Ideal para: Negócio sério, crescimento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+                <h3 class="text-xl font-bold text-center text-gray-800 mb-6">O Que Vocês Recebem (Mão de Obra)</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fas fa-mobile-alt text-2xl text-blue-600"></i></div>
+                        <p class="font-bold text-gray-800">App Cliente</p>
+                        <p class="text-sm text-gray-600">~80h desenvolvimento</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fas fa-utensils text-2xl text-green-600"></i></div>
+                        <p class="font-bold text-gray-800">Dashboard Cozinha</p>
+                        <p class="text-sm text-gray-600">~20h desenvolvimento</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fas fa-chart-pie text-2xl text-purple-600"></i></div>
+                        <p class="font-bold text-gray-800">Dashboard Admin</p>
+                        <p class="text-sm text-gray-600">~40h desenvolvimento</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600">+ Backend Supabase (~30h) + VeriFactu (~40h)</p>
+                    <p class="text-xl font-bold text-gray-800 mt-2">Total: ~210h de desenvolvimento profissional incluído</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 gradient-bg">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Pronto para Revolucionar sua Sorveteria?</h2>
+            <p class="text-xl text-white/90 mb-8 max-w-2xl mx-auto">Sistema completo: Kiosk + Dashboard Cozinha + Admin Total. Seja nosso primeiro cliente!</p>
+            <div class="flex flex-wrap justify-center gap-6 mb-12">
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-white">
+                    <i class="fas fa-phone text-3xl mb-3"></i>
+                    <p class="font-semibold">Ligar Agora</p>
+                    <p class="text-2xl font-bold">[Telefone]</p>
+                </div>
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-white">
+                    <i class="fas fa-envelope text-3xl mb-3"></i>
+                    <p class="font-semibold">Email</p>
+                    <p class="text-lg font-bold">abner@exemplo.com</p>
+                </div>
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-white">
+                    <i class="fas fa-map-marker-alt text-3xl mb-3"></i>
+                    <p class="font-semibold">Local</p>
+                    <p class="text-lg font-bold">Sabadell, Catalunha</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl p-8 max-w-3xl mx-auto shadow-2xl">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">Escolha seu Plano</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-left mb-6">
+                    <div class="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 cursor-pointer hover:border-blue-500 transition">
+                        <p class="font-bold text-gray-800">Econômica</p>
+                        <p class="text-2xl font-bold text-gray-600">€638 + €150/mês</p>
+                        <p class="text-sm text-gray-500">Kiosk básico + sistema essencial</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-xl p-4 border-2 border-purple-500 cursor-pointer">
+                        <p class="font-bold text-purple-800">Profissional</p>
+                        <p class="text-2xl font-bold text-purple-600">€1.508 + €250/mês</p>
+                        <p class="text-sm text-purple-600">Elo Wallaby + sistema completo</p>
+                    </div>
+                </div>
+                <p class="text-gray-500 text-sm"><i class="fas fa-info-circle mr-2"></i>Manutenção inclui: suporte remoto, updates, backup, alterações cardápio</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex justify-center gap-6 mb-6">
+                <i class="fas fa-ice-cream text-4xl text-pink-400"></i>
+                <i class="fas fa-laptop-code text-4xl text-blue-400"></i>
+                <i class="fas fa-chart-line text-4xl text-green-400"></i>
+                <i class="fas fa-mobile-alt text-4xl text-purple-400"></i>
+            </div>
+            <p class="text-xl font-bold mb-2">Abner • Enoque • Elias</p>
+            <p class="text-gray-400 mb-6">Programadores & TPV Specialists | Sabadell 2026</p>
+            <div class="flex justify-center gap-4 text-sm text-gray-500">
+                <span><i class="fas fa-check mr-1"></i>App Cliente</span>
+                <span><i class="fas fa-check mr-1"></i>Dashboard Cozinha</span>
+                <span><i class="fas fa-check mr-1"></i>Admin Completo</span>
+                <span><i class="fas fa-check mr-1"></i>VeriFactu 2026</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // ===== DEMO ORIGINAL =====
+        let pedido = { base: null, basePreco: 0, sabores: [], extras: [] };
+        const precos = { copo: 3.50, cone: 3.00, pote: 6.00, milkshake: 4.50 };
+        const nomes = { copo: 'Copo', cone: 'Cone', pote: 'Pote 500ml', milkshake: 'Milkshake', vainilla: 'Baunilha', chocolate: 'Chocolate', morango: 'Morango', menta: 'Menta', cookie: 'Cookies', manga: 'Manga' };
+
+        function esconderTodas() {
+            document.getElementById('telaInicial').classList.add('hidden');
+            document.getElementById('telaCardapio').classList.add('hidden');
+            document.getElementById('telaSabores').classList.add('hidden');
+            document.getElementById('telaCarrinho').classList.add('hidden');
+            document.getElementById('telaPagamento').classList.add('hidden');
+            document.getElementById('telaConfirmacao').classList.add('hidden');
+        }
+
+        function mostrarTela(id) {
+            esconderTodas();
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('fade-in');
+        }
+
+        function mudarIdioma(lang) { alert('Idioma alterado para: ' + (lang === 'cat' ? 'Català' : 'Español')); }
+        function mostrarCardapio() { mostrarTela('telaCardapio'); }
+        function voltarInicial() { pedido = { base: null, basePreco: 0, sabores: [], extras: [] }; atualizarContador(); mostrarTela('telaInicial'); }
+        function voltarCardapio() { mostrarTela('telaCardapio'); }
+        function voltarSabores() { mostrarTela('telaSabores'); }
+
+        function selecionarBase(base) {
+            pedido.base = base;
+            pedido.basePreco = precos[base];
+            mostrarTela('telaSabores');
+        }
+
+        function toggleSabor(sabor) {
+            const index = pedido.sabores.indexOf(sabor);
+            const btn = document.getElementById('sabor-' + sabor);
+
+            if (index > -1) {
+                pedido.sabores.splice(index, 1);
+                btn.classList.remove('bg-white', 'text-purple-600');
+                btn.classList.add('bg-white/20');
+            } else if (pedido.sabores.length < 3) {
+                pedido.sabores.push(sabor);
+                btn.classList.remove('bg-white/20');
+                btn.classList.add('bg-white', 'text-purple-600');
+            }
+
+            atualizarContador();
+        }
+
+        function atualizarContador() {
+            document.getElementById('contadorSabores').textContent = pedido.sabores.length + '/3';
+            const btn = document.getElementById('btnContinuar');
+            if (pedido.sabores.length > 0) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+            }
+        }
+
+        function mostrarCarrinho() {
+            const resumo = document.getElementById('resumoPedido');
+            let html = '<div class="flex justify-between text-white mb-2"><span>' + nomes[pedido.base] + '</span><span>€' + pedido.basePreco.toFixed(2) + '</span></div>';
+
+            pedido.sabores.forEach(s => {
+                html += '<div class="flex justify-between text-white/80 text-sm"><span>• ' + nomes[s] + '</span><span>incluído</span></div>';
+            });
+
+            resumo.innerHTML = html;
+            document.getElementById('subtotal').textContent = '€' + pedido.basePreco.toFixed(2);
+            document.getElementById('total').textContent = '€' + pedido.basePreco.toFixed(2);
+            document.getElementById('totalBtn').textContent = pedido.basePreco.toFixed(2);
+            mostrarTela('telaCarrinho');
+        }
+
+        function mostrarPagamento() { mostrarTela('telaPagamento'); }
+
+        function processarPagamento(metodo) {
+            setTimeout(() => { mostrarTela('telaConfirmacao'); }, 500);
+        }
+
+        // ===== SIMULADOR KIOSK FULLSCREEN =====
+        const kioskPrecos = { copo: 3.50, cone: 3.00, pote: 6.00, milkshake: 4.50 };
+        const kioskNomes = {
+            copo: 'Copo', cone: 'Cone', pote: 'Pote 500ml', milkshake: 'Milkshake',
+            vainilla: 'Baunilha', chocolate: 'Chocolate', morango: 'Morango', menta: 'Menta',
+            cookie: 'Cookies', manga: 'Manga', coco: 'Coco', cafe: 'Café', limao: 'Limão',
+            granola: 'Granola', calda_chocolate: 'Calda Chocolate', chantilly: 'Chantilly',
+            amendoim: 'Amendoim', cereja: 'Cereja', oreo: 'Oreo'
+        };
+        const kioskExtrasPrecos = {
+            granola: 0.50, calda_chocolate: 0.50, chantilly: 0.50,
+            amendoim: 0.50, cereja: 0.50, oreo: 0.50
+        };
+        let kioskPedido = { base: null, basePreco: 0, sabores: [], extras: [] };
+        let kioskPagamentoSelecionado = null;
+
+        function abrirSimulador() {
+            document.getElementById('simuladorTablet').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
+            atualizarRelogio();
+            navegarPara('home');
+            vibrarCurto();
+        }
+
+        function fecharSimulador() {
+            document.getElementById('simuladorTablet').classList.remove('ativo');
+            document.body.style.overflow = '';
+        }
+
+        function navegarPara(pagina) {
+            document.querySelectorAll('.kiosk-page').forEach(el => el.classList.remove('ativo'));
+            document.getElementById('page' + capitalize(pagina)).classList.add('ativo');
+
+            document.querySelectorAll('.bottom-nav button').forEach(el => el.classList.remove('ativo'));
+            const navBtn = document.getElementById('nav' + capitalize(pagina));
+            if (navBtn) navBtn.classList.add('ativo');
+
+            if (pagina === 'carrinho') atualizarCarrinhoKiosk();
+            vibrarCurto();
+        }
+
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        function vibrarCurto() {
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+
+        function mostrarToast(msg) {
+            const t = document.getElementById('kioskToast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function selecionarBaseKiosk(base) {
+            kioskPedido.base = base;
+            kioskPedido.basePreco = kioskPrecos[base];
+            kioskPedido.sabores = [];
+            kioskPedido.extras = [];
+            // reset visual sabores
+            document.querySelectorAll('[id^="kiosk-sabor-"]').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50');
+                btn.classList.add('bg-white');
+            });
+            atualizarContadorSaboresKiosk();
+            navegarPara('sabores');
+            mostrarToast('Base selecionada: ' + kioskNomes[base]);
+        }
+
+        function toggleSaborKiosk(sabor) {
+            const index = kioskPedido.sabores.indexOf(sabor);
+            const btn = document.getElementById('kiosk-sabor-' + sabor);
+            if (index > -1) {
+                kioskPedido.sabores.splice(index, 1);
+                btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50');
+                btn.classList.add('bg-white');
+            } else if (kioskPedido.sabores.length < 3) {
+                kioskPedido.sabores.push(sabor);
+                btn.classList.remove('bg-white');
+                btn.classList.add('ring-4', 'ring-purple-400', 'bg-purple-50');
+                mostrarToast(kioskNomes[sabor] + ' adicionado');
+            } else {
+                mostrarToast('Máximo de 3 sabores');
+            }
+            atualizarContadorSaboresKiosk();
+        }
+
+        function atualizarContadorSaboresKiosk() {
+            document.getElementById('contadorSaboresKiosk').textContent = kioskPedido.sabores.length + '/3';
+            const btn = document.getElementById('btnContinuarKiosk');
+            if (kioskPedido.sabores.length > 0) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'bg-gray-300');
+                btn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'bg-gray-300');
+                btn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+            }
+        }
+
+        function toggleExtraKiosk(extra) {
+            const index = kioskPedido.extras.indexOf(extra);
+            const btn = document.getElementById('kiosk-extra-' + extra);
+            if (index > -1) {
+                kioskPedido.extras.splice(index, 1);
+                btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50');
+                btn.classList.add('bg-white');
+            } else {
+                kioskPedido.extras.push(extra);
+                btn.classList.remove('bg-white');
+                btn.classList.add('ring-4', 'ring-purple-400', 'bg-purple-50');
+                mostrarToast(kioskNomes[extra] + ' adicionado');
+            }
+            atualizarBadgeCarrinho();
+        }
+
+        function atualizarCarrinhoKiosk() {
+            const resumo = document.getElementById('kioskResumoPedido');
+            let html = '';
+            if (kioskPedido.base) {
+                html += '<div class="cart-item-anim flex justify-between text-gray-800 font-semibold mb-1"><span>' + kioskNomes[kioskPedido.base] + '</span><span>€' + kioskPedido.basePreco.toFixed(2) + '</span></div>';
+                kioskPedido.sabores.forEach(s => {
+                    html += '<div class="cart-item-anim flex justify-between text-gray-500 text-sm pl-3"><span>• ' + kioskNomes[s] + '</span><span class="text-gray-400">incluído</span></div>';
+                });
+                kioskPedido.extras.forEach(e => {
+                    html += '<div class="cart-item-anim flex justify-between text-gray-500 text-sm pl-3"><span>+ ' + kioskNomes[e] + '</span><span>€' + kioskExtrasPrecos[e].toFixed(2) + '</span></div>';
+                });
+            }
+            resumo.innerHTML = html || '<p class="text-gray-400 text-sm">Nenhum item no carrinho</p>';
+            const extrasTotal = kioskPedido.extras.reduce((a, b) => a + kioskExtrasPrecos[b], 0);
+            const total = (kioskPedido.basePreco || 0) + extrasTotal + 0.30;
+            document.getElementById('kioskSubtotal').textContent = '€' + ((kioskPedido.basePreco || 0) + extrasTotal).toFixed(2);
+            document.getElementById('kioskTotal').textContent = '€' + total.toFixed(2);
+            document.getElementById('kioskTotalBtn').textContent = total.toFixed(2);
+            atualizarBadgeCarrinho();
+        }
+
+        function atualizarBadgeCarrinho() {
+            const badge = document.getElementById('badgeCarrinho');
+            const count = (kioskPedido.base ? 1 : 0) + kioskPedido.extras.length;
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function limparPedidoKiosk() {
+            kioskPedido = { base: null, basePreco: 0, sabores: [], extras: [] };
+            document.querySelectorAll('[id^="kiosk-sabor-"]').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50');
+                btn.classList.add('bg-white');
+            });
+            document.querySelectorAll('[id^="kiosk-extra-"]').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50');
+                btn.classList.add('bg-white');
+            });
+            kioskPagamentoSelecionado = null;
+            document.querySelectorAll('.pay-method').forEach(el => el.classList.remove('selected'));
+            document.getElementById('btnConfirmarPagamento').disabled = true;
+            document.getElementById('btnConfirmarPagamento').classList.add('opacity-60', 'bg-gray-300');
+            document.getElementById('btnConfirmarPagamento').classList.remove('bg-green-500', 'hover:bg-green-600');
+            atualizarContadorSaboresKiosk();
+            atualizarCarrinhoKiosk();
+            navegarPara('home');
+            mostrarToast('Pedido cancelado');
+        }
+
+        function selecionarPagamento(metodo) {
+            kioskPagamentoSelecionado = metodo;
+            document.querySelectorAll('.pay-method').forEach(el => el.classList.remove('selected'));
+            document.getElementById('pay-' + metodo).classList.add('selected');
+            const btn = document.getElementById('btnConfirmarPagamento');
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'bg-gray-300');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            vibrarCurto();
+        }
+
+        function confirmarPagamento() {
+            if (!kioskPagamentoSelecionado) return;
+            document.getElementById('pagamentoAnimacao').classList.remove('hidden');
+            document.getElementById('btnConfirmarPagamento').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('pagamentoAnimacao').classList.add('hidden');
+                document.getElementById('btnConfirmarPagamento').classList.remove('hidden');
+                document.getElementById('kioskNumeroPedido').textContent = '#' + Math.floor(40 + Math.random() * 20);
+                navegarPara('confirmacao');
+                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+            }, 1500);
+        }
+
+        function voltarHomeKiosk() {
+            limparPedidoKiosk();
+            navegarPara('home');
+        }
+
+        function pedidoRapidoDuo() {
+            kioskPedido = { base: 'milkshake', basePreco: kioskPrecos.milkshake, sabores: ['menta', 'manga'], extras: ['chantilly'] };
+            // atualizar visuais dos sabores
+            document.querySelectorAll('[id^="kiosk-sabor-"]').forEach(btn => btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50'));
+            ['menta', 'manga'].forEach(s => {
+                const btn = document.getElementById('kiosk-sabor-' + s);
+                if (btn) { btn.classList.remove('bg-white'); btn.classList.add('ring-4', 'ring-purple-400', 'bg-purple-50'); }
+            });
+            document.querySelectorAll('[id^="kiosk-extra-"]').forEach(btn => btn.classList.remove('ring-4', 'ring-purple-400', 'bg-purple-50'));
+            const ebtn = document.getElementById('kiosk-extra-chantilly');
+            if (ebtn) { ebtn.classList.remove('bg-white'); ebtn.classList.add('ring-4', 'ring-purple-400', 'bg-purple-50'); }
+            atualizarContadorSaboresKiosk();
+            navegarPara('carrinho');
+            mostrarToast('Promoção Milkshake Duo adicionada!');
+        }
+
+        function atualizarRelogio() {
+            const agora = new Date();
+            const h = String(agora.getHours()).padStart(2, '0');
+            const m = String(agora.getMinutes()).padStart(2, '0');
+            document.getElementById('kioskClock').textContent = h + ':' + m;
+        }
+        setInterval(atualizarRelogio, 60000);
+        atualizarRelogio();
+    </script>
+</body>
+</html>
